@@ -16,16 +16,21 @@ set passwd [lindex $argv 2]
 # send_user "passwd = $passwd\n"
 
 # Start the session
+# spawn ssh $user@$host
 catch {spawn ssh $user@$host}
-# expect "*passphrase*" { send "$passwd\r" }
+
 expect {
     "(yes/no)?"
     { send "yes\n"; exp_continue }
     "*passphrase*"
-    { send "$passwd\n"; exp_continue } # exp_continue必须有,否则需要另写一个expect block
-    "*instance*"
-    { send "sudo -i\n" }
+    { send "$passwd\n" } # exp_continue必须有,否则需要另写一个expect block
 }
-# expect "*instance*" { send "sudo -i\n" }
-interact
+
+expect "*instance*" {
+    send "sudo -i\n";
+    send "whoami\n";
+    send "ls -l\n";
+    interact
+}
+# interact
 
