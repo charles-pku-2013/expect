@@ -1,0 +1,36 @@
+#!/usr/bin/expect
+
+# 参数1：远程host；参数2：远程password
+if { $argc != 2 } {
+    send_user "Usage: host password\n"
+    exit
+}
+
+set host [lindex $argv 0]
+set pw [lindex $argv 1]
+
+
+set TERMSERV yourjumpserver # 跳板机服务器
+set USER jumpserveruser # 用户名
+set PASSWORD jumperserverpasswd # 跳板机密码
+
+set fd [open /place/to/passcode r] # 本地存放passcode的地方
+gets $fd pc
+close $fd
+
+# Start the session
+catch {spawn ssh -l $USER $TERMSERV} # 登录跳板机
+
+# Login
+expect "*assword:*" { send "$PASSWORD\r" }
+expect "*passcode:*" { send "$pc\r" }
+
+#通过跳板机登录线上机器
+expect "*hostname*" { send "ssh -l $USER $host\r" } # host为你目标机器的名字
+expect {
+    "(yes/no)?"
+    {send "yes\n";exp_continue}
+    "*assword:*"
+    {send "$pw\n"}
+}
+expect "*$host*" { send "cd ~\r"; interact }

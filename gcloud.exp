@@ -1,0 +1,31 @@
+#!/usr/bin/expect
+
+set timeout 30
+
+if { $argc != 3 } {
+    send_user "Usage: user host password\n"
+    exit
+}
+
+set user [lindex $argv 0]
+set host [lindex $argv 1]
+set passwd [lindex $argv 2]
+
+# send_user "user = $user\n"
+# send_user "host = ${host}\n"
+# send_user "passwd = $passwd\n"
+
+# Start the session
+catch {spawn ssh $user@$host}
+# expect "*passphrase*" { send "$passwd\r" }
+expect {
+    "(yes/no)?"
+    { send "yes\n"; exp_continue }
+    "*passphrase*"
+    { send "$passwd\n"; exp_continue } # exp_continue必须有,否则需要另写一个expect block
+    "*instance*"
+    { send "sudo -i\n" }
+}
+# expect "*instance*" { send "sudo -i\n" }
+interact
+
