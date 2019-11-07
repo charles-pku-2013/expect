@@ -1,0 +1,44 @@
+#!/usr/bin/expect
+
+set timeout 30
+
+if { $argc != 1 } {
+    send_user "Usage: host\n"
+    exit
+}
+
+set host [lindex $argv 0]
+set username "user"
+set jps_host "jps.host.com"
+set jps_passwd "passwd"
+set host_passwd "passwd"
+
+# send_user "user = $user\n"
+# send_user "host = ${host}\n"
+# send_user "passwd = $passwd\n"
+# send_user "host_passwd = $host_passwd\n"
+
+# Start the session
+catch {spawn ssh -p 80 $username@jps.host.com}
+
+expect {
+    "*(yes/no)?"
+    { send "yes\n"; exp_continue }
+    "*password*"
+    { send "$jps_passwd\n" }
+}
+
+# jps logged in
+expect "*recarch_dev*" {
+    send "ssh admin@$host\n"
+}
+
+expect {
+    "(yes/no)?"
+    {send "yes\n"; exp_continue}
+    "*password:*"
+    {send "$host_passwd\n"}
+}
+
+expect "*admin@*" { send "cd /export/home/admin/admin_mfs\n" }
+expect "*admin@*" { interact }
